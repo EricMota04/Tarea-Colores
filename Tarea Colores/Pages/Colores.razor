@@ -1,0 +1,74 @@
+﻿@page "/Colores"
+<h3>Colores</h3>
+
+
+@foreach (var color in inputs)
+{
+    
+    //get color index
+    var index = inputs.IndexOf(color);
+    //make a new row every 5 inputs
+    if (index % 5 == 0)
+    {
+        <br />
+    }
+    <input class="@clasecss(color.valor)" @bind="color.valor" @bind:after="contar" style="padding: 4px; margin: 2px;">
+}
+
+<div>
+    Rojo: @rojo
+    Verde: @verde
+    Azul: @azul
+</div>
+
+@code {
+    int rojo, verde, azul = 0;
+
+    //detect input change
+
+    class Objx{
+        public string valor = "";
+    }
+
+    List<Objx> inputs = new List<Objx>();
+
+    void contar(){
+        rojo = 0;
+        verde = 0;
+        azul = 0;
+
+        foreach(var color in inputs){
+            color.ToString().ToLower().Trim();
+            if(color.valor.Contains("rojo")){
+                rojo++;
+            }
+            else if(color.valor.Contains("verde")){
+                verde++;
+            }
+            else if(color.valor.Contains("azul")){
+                azul++;
+            }
+            
+        }
+    }
+protected override void OnInitialized()
+    {
+        for (int i = 0; i < 25; i++)
+        {
+            inputs.Add(new Objx());
+        }
+    }
+    string clasecss(string color){
+        color = color.ToLower().Trim();
+        if(color.Contains("rojo")){
+            return "bg-danger";
+        }
+        else if(color.Contains("verde")){
+            return "bg-success";
+        }
+        else if(color.Contains("azul")){
+            return "bg-primary";
+        }
+        return "";
+    }
+}
