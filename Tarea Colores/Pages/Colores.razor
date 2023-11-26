@@ -1,18 +1,18 @@
 ﻿@page "/Colores"
+
+@using Tarea_Colores.Models;
 <h3>Colores</h3>
 
-
-@foreach (var color in inputs)
+@foreach (var color in colors)
 {
-    
-    //get color index
-    var index = inputs.IndexOf(color);
-    //make a new row every 5 inputs
+    // get color index
+    var index = colors.IndexOf(color);
+    // make a new row every 5 inputs
     if (index % 5 == 0)
     {
         <br />
     }
-    <input class="@clasecss(color.valor)" @bind="color.valor" @bind:after="contar" style="padding: 4px; margin: 2px;">
+    <input class="@clasecss(color.Valor)" @bind="color.Valor" @oninput="contar" style="padding: 4px; margin: 2px;">
 }
 
 <div>
@@ -20,53 +20,90 @@
     Verde: @verde
     Azul: @azul
 </div>
+<button @onclick="SaveColorsToDatabase">Guardar</button>
 
 @code {
     int rojo, verde, azul = 0;
 
-    //detect input change
+    List<ColorModel> colors;
 
-    class Objx{
-        public string valor = "";
-    }
-
-    List<Objx> inputs = new List<Objx>();
-
-    void contar(){
+    void contar()
+    {
         rojo = 0;
         verde = 0;
         azul = 0;
 
-        foreach(var color in inputs){
-            color.ToString().ToLower().Trim();
-            if(color.valor.Contains("rojo")){
+        foreach (var color in colors)
+        {
+            color.Valor = color.Valor?.ToLower().Trim(); // Update the color.Valor directly
+            if (color.Valor.Contains("rojo"))
+            {
                 rojo++;
             }
-            else if(color.valor.Contains("verde")){
+            else if (color.Valor.Contains("verde"))
+            {
                 verde++;
             }
-            else if(color.valor.Contains("azul")){
+            else if (color.Valor.Contains("azul"))
+            {
                 azul++;
             }
-            
         }
     }
-protected override void OnInitialized()
+
+    protected override void OnInitialized()
     {
-        for (int i = 0; i < 25; i++)
+
+        using (var dbContext = new AppDbContext())
         {
-            inputs.Add(new Objx());
+            // Ensure there are at least 25 rows in the database
+            for (int i = 0; i < 25; i++)
+            {
+                var color = dbContext.Colors.FirstOrDefault(c => c.Id == i + 1); // since my id starts from one i use it like this
+                if (color == null)
+                {
+                    dbContext.Colors.Add(new ColorModel { Valor = "" }); // Add empty row if not present
+                }
+            }
+
+            dbContext.SaveChanges();
+
+            colors = dbContext.Colors.ToList();
+            contar();
         }
     }
-    string clasecss(string color){
-        color = color.ToLower().Trim();
-        if(color.Contains("rojo")){
+
+    async Task SaveColorsToDatabase()
+    {
+        using (var dbContext = new AppDbContext())
+        {
+            // modificar los colores actuales en la base de datos
+            foreach (var color in colors)
+            {
+                var existingColor = dbContext.Colors.Find(color.Id);
+                if (existingColor != null)
+                {
+                    existingColor.Valor = color.Valor;
+                }
+            }
+
+            await dbContext.SaveChangesAsync();
+        }
+    }
+
+    string clasecss(string color)
+    {
+        color = color?.ToLower().Trim() ?? "";
+        if (color.Contains("rojo"))
+        {
             return "bg-danger";
         }
-        else if(color.Contains("verde")){
+        else if (color.Contains("verde"))
+        {
             return "bg-success";
         }
-        else if(color.Contains("azul")){
+        else if (color.Contains("azul"))
+        {
             return "bg-primary";
         }
         return "";
