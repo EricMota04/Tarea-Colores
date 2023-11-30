@@ -5,11 +5,10 @@ namespace Tarea_Colores
 {
     public class AppDbContext : DbContext
     {
-        public DbSet<ColorModel> Colors { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-            optionsBuilder.UseSqlite("Data Source=colors.db");
         }
+
+        public DbSet<ColorModel> Colors { get; set; }
     }
 }

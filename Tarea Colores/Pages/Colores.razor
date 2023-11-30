@@ -27,6 +27,9 @@
 
     List<ColorModel> colors;
 
+    [Inject]
+    public AppDbContext DbContext { get; set; } // Inject the AppDbContext
+
     void contar()
     {
         rojo = 0;
@@ -35,7 +38,7 @@
 
         foreach (var color in colors)
         {
-            color.Valor = color.Valor?.ToLower().Trim(); 
+            color.Valor = color.Valor?.ToLower().Trim();
             if (color.Valor.Contains("rojo"))
             {
                 rojo++;
@@ -53,42 +56,23 @@
 
     protected override void OnInitialized()
     {
-
-        using (var dbContext = new AppDbContext())
-        {
-            // Ensure there are at least 25 rows in the database
-            for (int i = 0; i < 25; i++)
-            {
-                var color = dbContext.Colors.FirstOrDefault(c => c.Id == i + 1); // since my id starts from one i use it like this
-                if (color == null)
-                {
-                    dbContext.Colors.Add(new ColorModel { Valor = "" }); // Add empty row if not present
-                }
-            }
-
-            dbContext.SaveChanges();
-
-            colors = dbContext.Colors.ToList();
-            contar();
-        }
+        colors = DbContext.Colors.ToList();
+        contar();
     }
 
     async Task SaveColorsToDatabase()
     {
-        using (var dbContext = new AppDbContext())
+        // Modificar los colores actuales en la base de datos
+        foreach (var color in colors)
         {
-            // modificar los colores actuales en la base de datos
-            foreach (var color in colors)
+            var existingColor = DbContext.Colors.Find(color.Id);
+            if (existingColor != null)
             {
-                var existingColor = dbContext.Colors.Find(color.Id);
-                if (existingColor != null)
-                {
-                    existingColor.Valor = color.Valor;
-                }
+                existingColor.Valor = color.Valor;
             }
-
-            await dbContext.SaveChangesAsync();
         }
+
+        await DbContext.SaveChangesAsync();
     }
 
     string clasecss(string color)
